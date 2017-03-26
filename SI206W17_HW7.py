@@ -128,8 +128,6 @@ for a_tweet in umsi_tweets:
 
 sql_connection.commit()
 
-
-
 # You can check out whether it worked in the SQLite browser! (And with the tests.)
 
 
