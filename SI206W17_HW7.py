@@ -8,7 +8,8 @@ import tweepy
 import twitter_info # still need this in the same directory, filled out
 
 ## Make sure to comment with:
-# Your name:
+# Your name: David Nguyen (djnguyen)
+# Discussion: Thursday (3-4 PM)
 # The names of any people you worked with for this assignment:
 
 # ******** #
@@ -55,7 +56,24 @@ except:
 # Your function must cache data it retrieves and rely on a cache file!
 # Note that this is a lot like work you have done already in class (but, depending upon what you did previously, may not be EXACTLY the same, so be careful your code does exactly what you want here).
 
+def get_user_tweets(twitter_handle):
 
+	some_identifier = "twitter_{}".format(twitter_handle)
+
+	if some_identifier in CACHE_DICTION:
+		tweet_results = CACHE_DICTION[some_identifier]
+
+	else:
+
+		tweet_results = api.user_timeline(twitter_handle)
+		CACHE_DICTION[some_identifier] = tweet_results
+
+		dumping_results = open(CACHE_FNAME,'w')
+		dumping_results.write(json.dumps(CACHE_DICTION, indent=2))
+		dumping_results.close()
+
+	return CACHE_DICTION[some_identifier]
+	
 
 
 
@@ -72,24 +90,43 @@ except:
 
 # Make a connection to a new database tweets.db, and create a variable to hold the database cursor.
 
+sql_connection = sqlite3.connect("tweets.db")
+sql_cursor = sql_connection.cursor()
+
 
 # Write code to drop the Tweets table if it exists, and create the table (so you can run the program over and over), with the correct (4) column names and appropriate types for each.
 # HINT: Remember that the time_posted column should be the TIMESTAMP data type!
 
+drop_table_command = "DROP TABLE IF EXISTS Tweets"
+
+sql_cursor.execute(drop_table_command)
+
+create_table_command = "CREATE TABLE Tweets (tweet_id INT PRIMARY KEY, author TEXT, time_posted TIMESTAMP, tweet_text TEXT, retweets INT)"
+sql_cursor.execute(create_table_command)
+
 
 # Invoke the function you defined above to get a list that represents a bunch of tweets from the UMSI timeline. Save those tweets in a variable called umsi_tweets.
 
-
+umsi_tweets = get_user_tweets("UMSI")
 
 
 # Use a for loop, the cursor you defined above to execute INSERT statements, that insert the data from each of the tweets in umsi_tweets into the correct columns in each row of the Tweets database table.
 
 # (You should do nested data investigation on the umsi_tweets value to figure out how to pull out the data correctly!)
 
+sql_insert_statement = "INSERT INTO Tweets VALUES (?,?,?,?,?)"
+
+for a_tweet in umsi_tweets:
+
+	single_tweet_info = (a_tweet['id'],a_tweet['user']['screen_name'],a_tweet['created_at'],a_tweet['text'],a_tweet['retweet_count'])
+
+	sql_cursor.execute(sql_insert_statement, single_tweet_info)
 
 
 
 # Use the database connection to commit the changes to the database
+
+sql_connection.commit()
 
 
 
@@ -105,18 +142,29 @@ except:
 
 # Select from the database all of the TIMES the tweets you collected were posted and fetch all the tuples that contain them in to the variable tweet_posted_times.
 
+tweet_posted_times_query = "SELECT time_posted FROM Tweets"
+sql_cursor.execute(tweet_posted_times_query)
+tweet_posted_times = sql_cursor.fetchall()
 
 # Select all of the tweets (the full rows/tuples of information) that have been retweeted MORE than 2 times, and fetch them into the variable more_than_2_rts.
 
+more_than_2_RTs_query = "SELECT * FROM Tweets WHERE retweets > 2"
+sql_cursor.execute(more_than_2_RTs_query)
+more_than_2_rts = sql_cursor.fetchall()
 
 
 # Select all of the TEXT values of the tweets that are retweets of another account (i.e. have "RT" at the beginning of the tweet text). Save the FIRST ONE from that group of text values in the variable first_rt. Note that first_rt should contain a single string value, not a tuple.
 
+retweeted_tweet_query = "SELECT tweet_text FROM tweets WHERE tweet_text LIKE 'RT%'"
+sql_cursor.execute(retweeted_tweet_query)
+first_rt = sql_cursor.fetchone()[0]
+
+#print (first_rt)
 
 
 # Finally, done with database stuff for a bit: write a line of code to close the cursor to the database.
 
-
+sql_connection.close()
 
 ## [PART 3] - Processing data
 
@@ -185,3 +233,34 @@ class PartThree(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main(verbosity=2)
+
+
+
+#MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+#MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+#MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+#MMMMMMM             MMMMMMMMMMMMMMMMM             MMMMMMMMM
+#MMMMMMM              MMMMMMMMMMMMMMM              MMMMMMMMM
+#MMMMMMM                MMMMMMMMMMM                MMMMMMMMM
+#MMMMMMM                 MMMMMMMMM                 MMMMMMMMM
+#MMMMMMM                  MMMMMMM                  MMMMMMMMM
+#MMMMMMMMMMM               MMMMM                MMMMMMMMMMMM
+#MMMMMMMMMMM                MMM                 MMMMMMMMMMMM
+#MMMMMMMMMMM                 V                  MMMMMMMMMMMM
+#MMMMMMMMMMM                                    MMMMMMMMMMMM
+#MMMMMMMMMMM         ^               ^          MMMMMMMMMMMM
+#MMMMMMMMMMM         MM             MM          MMMMMMMMMMMM
+#MMMMMMMMMMM         MMMM         MMMM          MMMMMMMMMMMM
+#MMMMMMMMMMM         MMMMM       MMMMM          MMMMMMMMMMMM
+#MMMMMMMMMMM         MMMMMM     MMMMMM          MMMMMMMMMMMM
+#MMMMMMM                MMMM   MMMM                MMMMMMMMM
+#MMMMMMM                MMMMMVMMMMM                MMMMMMMMM
+#MMMMMMM                MMMMMMMMMMM                MMMMMMMMM
+#MMMMMMM                MMMMMMMMMMM                MMMMMMMMM
+#MMMMMMM                MMMMMMMMMMM                MMMMMMMMM
+#MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+#MMMMMMMMMMMMMMMM/-------------------------/MMMMMMMMMMMMMMMM
+#MMMMMMMMMMMMMMM/- SCHOOL OF INFORMATION -/MMMMMMMMMMMMMMMMM
+#MMMMMMMMMMMMMM/-------------------------/MMMMMMMMMMMMMMMMMM
+#MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+#MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
