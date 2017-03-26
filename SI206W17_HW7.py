@@ -181,7 +181,9 @@ sql_connection.close()
 # If you want to challenge yourself here -- this function definition (what goes under the def statement) CAN be written in one line! Definitely, definitely fine to write it with multiple lines, too, which will be much easier and clearer.
 
 
+def get_twitter_users(some_tweet):
 
+	return set(username.strip("@") for username in re.findall(r'@[A-z0-9_]+', some_tweet))
 
 
 #########
